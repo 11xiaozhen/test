@@ -11,7 +11,7 @@
 #      password: 1234
 #      driver-class-name: com.mysql.jdbc.Driver
 server:
-  port: 8080
+  port: 8081
 spring:
   #  关闭thymeleaf模板的缓存
   thymeleaf:
@@ -20,7 +20,7 @@ spring:
   datasource:
     username: root
     password: 1234
-    url: jdbc:mysql://docker_test/test
+    url: jdbc:mysql://192.168.93.1:3306/test
     driver-class-name: com.mysql.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     #    其他属性
