@@ -1,0 +1,52 @@
+#spring:
+#  datasource:
+#    master:
+#      jdbc-url: jdbc:mysql://192.168.93.20:3307/test
+#      username: root
+#      password: 1234
+#      driver-class-name: com.mysql.jdbc.Driver
+#    slave:
+#      jdbc-url: jdbc:mysql://192.168.93.20:3308/test
+#      username: root   # 只读账户
+#      password: 1234
+#      driver-class-name: com.mysql.jdbc.Driver
+server:
+  port: 8080
+spring:
+  #  关闭thymeleaf模板的缓存
+  thymeleaf:
+    cache: false
+  #  加载数据源
+  datasource:
+    username: root
+    password: 1234
+    url: jdbc:mysql://docker_test/test
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    #    其他属性
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    #   配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: [stat,wall,log4j]
+    maxPoolPreparedStatementPerConnectionSize: 20
+    useGlobalDataSourceStat: true
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+#加载日志
+logging:
+  level:
+    com:
+      dk: debug
+  path: E:/logs/springboot_1
+mybatis:
+  type-aliases-package: com.dk.pojo
+  config-location: classpath:mybatis/sqlMapConfig.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml

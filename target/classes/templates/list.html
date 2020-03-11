@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div th:insert="common.html"></div>
+    <div id="toolbar">
+        <input type="button" value="增加" th:onclick="toAdd()" class="btn btn-primary">
+        <input type="button" value="批量删除" th:onclick="deleteAll()" class="btn btn-danger">
+<!--        <form id="selectInfo">-->
+<!--            名称:<input type="text" name="carName" id="carName">-->
+<!--            <input type="button" value="搜索" th:onclick="getData()" class="btn btn-primary">-->
+<!--        </form>-->
+    </div>
+    <table id="table"></table>
+    <script type="text/javascript">
+        $(function () {
+            $("#table").bootstrapTable({
+                url:'/userController/getInfo',                     //请求后台的URL（*）
+                method: 'post',                      //请求方式（*）
+                contentType:"application/x-www-form-urlencoded",
+                toolbar: '#toolbar',              //工具按钮用哪个容器
+                striped: true,                      //是否显示行间隔色
+                cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                pagination: true,                   //是否显示分页（*）
+                sortable: true,                     //是否启用排序
+                sortOrder: "asc",                   //排序方式
+                sidePagination: "server",           //分页方式：client客户端分页，server服务端分页（*）
+                pageNumber: 1,                      //初始化加载第一页，默认第一页,并记录
+                pageSize: 3,                     //每页的记录行数（*）
+                pageList: [3, 5, 10, 15],        //可供选择的每页的行数（*）
+                search: false,                      //是否显示表格搜索
+                strictSearch: true,
+                showColumns: true,                  //是否显示所有的列（选择显示的列）
+                showRefresh: true,                  //是否显示刷新按钮
+                minimumCountColumns: 2,             //最少允许的列数
+                clickToSelect: true,                //是否启用点击选中行
+                //height: 500,                      //行高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+                uniqueId: "ID",                     //每一行的唯一标识，一般为主键列
+                showToggle: true,                   //是否显示详细视图和列表视图的切换按钮
+                cardView: false,                    //是否显示详细视图
+                detailView: false,                  //是否显示父子表
+                //得到查询的参数
+                queryParams : function (params) {
+                    //这里的键的名字和控制器的变量名必须一致，这边改动，控制器也需要改成一样的
+                    var temp = {
+                        pageSize:params.limit,
+                        pageNum:(params.offset / params.limit) + 1,
+                        carName:$("#name").val(),
+                    };
+                    return temp;
+                },
+                columns: [{
+                    checkbox: true,
+                    visible: true
+                }, {
+                    field: 'id',
+                    title: 'ID'
+                }, {
+                    field: 'name',
+                    title: '用户名称'
+                },{
+                    title: '操作',
+                    formatter:function(data,row,index) {
+                        var id = row.id;
+                        return ['<a class="btn btn-xs blue" title="编辑" href="javascript:toUpdate(' + id + ')" ><span class="glyphicon glyphicon-pencil"></span></a>',
+                            '<a class="btn btn-xs red" title="删除" href="javascript:deleteUser(' + id + ')"><span class="glyphicon glyphicon-remove"></a>'].join('');
+                    }
+                }]
+            });
+        })
+
+
+        function deleteAll(){
+            var checkes = $("#table").bootstrapTable("getSelections");
+            var ids = [];
+            if(checkes.length == 0){
+                alert("请选择要删除的行");
+                return;
+            }
+            for(var i=0; i<checkes.length; i++){
+                ids.push(checkes[i]['id']);
+            }
+            alert(ids);
+            if(confirm("是否确认删除")){
+                $.ajax({
+                    url:"/userController/deleteAll?ids="+ids,
+                    type:"post",
+                    data:{},
+                    async:false,//同步
+                    dataType:"text",
+                    success:function(result){
+                        if(result=='true'){
+                            //添加成功后，调用查询方法
+                            alert('删除数据成功');
+                            getData();
+                        }else{
+                            alert("删除信息失败");
+                        }
+                    },
+                    error:function(){
+                        alert("系统错误，请联系管理员");
+                    }
+                })
+            }
+        }
+
+
+        function deleteUser(id){
+            if(confirm("是否确认删除")){
+                $.ajax({
+                    url:"/userController/deleteUser/"+id,
+                    type:"post",
+                    data:{},
+                    async:false,//同步
+                    dataType:"text",
+                    success:function(result){
+                        if(result=='true'){
+                            //添加成功后，调用查询方法
+                            alert('删除数据成功');
+                            getData();
+                        }else{
+                            alert("删除信息失败");
+                        }
+                    },
+                    error:function(){
+                        alert("系统错误，请联系管理员");
+                    }
+                })
+            }
+        }
+
+        function toUpdate(id){
+            BootstrapDialog.show({
+                title: '修改角色', //标题
+                message:$('<div></div>').load("/userController/toUpdate/"+id),//显示的内容
+                type : BootstrapDialog.TYPE_SUCCESS,//弹框的类型
+                closable: true, //×
+                draggable : true,//弹框可以拖拽
+                buttons:[//添加按钮
+                    {
+                        label:"确定",
+                        cssClass: 'btn-primary', //按钮样式
+                        action: function(dialog){ //点击触发的回掉函数
+                            $.ajax({
+                                url:"/userController/updateUser",
+                                type:"post",
+                                data:$("#updateUserForm").serialize(),
+                                async:false,//同步
+                                dataType:"text",
+                                success:function(result){
+                                    if(result=='true'){
+                                        //添加成功后，调用查询方法
+                                        alert('提交数据成功');
+                                        dialog.close();
+                                        getData();
+                                    }else{
+                                        alert("提交信息失败");
+                                    }
+                                },
+                                error:function(){
+                                    alert("系统错误，请联系管理员");
+                                }
+                            })
+                        }
+                    },{
+                        label:"取消",
+                        cssClass: 'btn-danger',
+                        action: function(dialog){
+                            dialog.close();
+                        }
+                    }
+                ]
+            });
+        }
+
+        function toAdd(){
+            BootstrapDialog.show({
+                title: '添加角色', //标题
+                message:$('<div></div>').load("/userController/toAdd"),//显示的内容
+                type : BootstrapDialog.TYPE_SUCCESS,//弹框的类型
+                closable: true, //×
+                draggable : true,//弹框可以拖拽
+                buttons:[//添加按钮
+                    {
+                        label:"确定",
+                        cssClass: 'btn-primary', //按钮样式
+                        action: function(dialog){ //点击触发的回掉函数
+                            $.ajax({
+                                url:"/userController/addUser",
+                                type:"post",
+                                data:$("#addUserForm").serialize(),
+                                async:false,//同步
+                                dataType:"text",
+                                success:function(result){
+                                    if(result=='true'){
+                                        //添加成功后，调用查询方法
+                                        alert('提交数据成功');
+                                        dialog.close();
+                                        getData();
+                                    }else{
+                                        alert("提交信息失败");
+                                    }
+                                },
+                                error:function(){
+                                    alert("系统错误，请联系管理员");
+                                }
+                            })
+                        }
+                    },{
+                        label:"取消",
+                        cssClass: 'btn-danger',
+                        action: function(dialog){
+                            dialog.close();
+                        }
+                    }
+                ]
+            });
+        }
+
+        function getData(){
+            $("#table").bootstrapTable("refresh");
+        }
+    </script>
+</body>
+
+</html>
